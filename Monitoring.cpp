@@ -1,0 +1,116 @@
+#include <SPI.h>
+#include <SD.h>
+#include <Arduino.h>
+#include "Monitoring.h"
+#include "Menu.h"
+#include "Schedule.h"
+#include "Status.h"
+#include "Power.h"
+
+#define PH_PROBE_PIN A7
+#define N_PH_SAMPLES 20
+
+#define SD_CHIP_SELECT 4
+
+int phSamples[N_PH_SAMPLES];
+uint8_t phIndex = 0;
+float phValue;
+float phCalibration[6][2] = {{ -1, -3.5}, { -2, -7}, {1.68, 0}, {4.0, 0}, {7.0, 0}, {10.0, 0}};
+DateTime lastLog = DateTime(0);
+
+void initMonitoring() {
+  if (!SD.begin(SD_CHIP_SELECT)) {
+
+  }
+  lastLog = getTime();
+//  Serial.begin(9600);
+}
+
+void updateMonitoring() {
+  phSamples[phIndex] = analogRead(PH_PROBE_PIN);
+  float phRawValue = centralAverage(phSamples, 6, 14) * 5.0 / 1024 / 6;
+  phValue = interpolateValue(phRawValue, phCalibration);
+
+  phIndex ++;
+  phIndex %= N_PH_SAMPLES;
+
+  bool loggingEnabled = getVar(MVI_M_LOGGING_SWITCH);
+  if ((getTime() - TimeSpan(0, 0, 0, 10)).secondstime() > lastLog.secondstime() && loggingEnabled) {
+    float save[3] = {getTime().secondstime(), getVoltage(), getCurrent()};
+    bool a = saveArray(save, 3, String("datalog.csv"), String("Time, Voltage, Current"));
+    lastLog = getTime();
+  }
+
+}
+
+float centralAverage(int vals[], uint8_t lowIndex, uint8_t highIndex) {
+  int len = sizeof(&vals) / sizeof(vals);
+  int temp;
+  for (int i = 0; i < len - 1; i++) {
+    for (int j = i + 1; j < len; j++) {
+      if (vals[i] > vals[j]) {
+        temp = vals[i];
+        vals[i] = vals[j];
+        vals[j] = temp;
+      }
+    }
+  }
+  int sum = 0;
+  if (vals[highIndex] == -1 || vals[lowIndex] == -1) {
+    return -1;
+  }
+  for (int i = lowIndex; i <= highIndex; i++) {
+    sum += vals[i];
+  }
+  return (float) sum / ((float) (highIndex - lowIndex + 1));
+}
+
+float interpolateValue(float rawValue, float c[6][2]) {
+  int i1 = 0; // Closest calibration point
+  int v1 = - 1000;
+  int i2 = 1; // Second calibration point
+  int v2 = - 2000;
+  float v;
+
+  for (int i = 0; i < 6; i ++) {
+    v = abs(c[i][0] - rawValue);
+    if (v < v2 && c[i][1] != 0) {
+      if (v < v1) {
+        v1 = v;
+        i1 = i;
+      }
+      else {
+        v2 = v;
+        i2 = i;
+      }
+    }
+  }
+  return (rawValue - c[i1][0]) / (c[i2][0] - c[i1][0]) * (c[i2][1] - c[i1][1]) + c[i1][1];
+}
+
+bool saveArray(float ar [], int len, String filename, String header) {
+  String toSave = "";
+
+  for (int i = 0; i < len; i++) {
+    toSave += String(ar[i]);
+    if (i != len - 1) {
+      toSave += ", ";
+    }
+  }
+  File saveFile = SD.open(filename);
+  bool needsHeader = true;
+  if (saveFile) {
+    saveFile.close();
+    needsHeader = false;
+  }
+
+  saveFile = SD.open(filename, FILE_WRITE);
+
+  if (saveFile) {
+    if (needsHeader) saveFile.println(header);
+    saveFile.println(toSave);
+    saveFile.close();
+  }
+}
+
+
