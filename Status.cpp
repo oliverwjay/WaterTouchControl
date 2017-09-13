@@ -86,9 +86,10 @@ void updateStatus() {
     warningString = "No issues";
   }
   if (!startTimer) warningTime = millis();
-  if (statusState == SS_OFF) warningTime = millis() - 1000L*60L*3;
-  Serial.println(millis()-warningTime);
-  if(millis() - warningTime > (long)1000L*60L*getVar(MVI_WARNING_PERIOD) && targetOn){
+  if (statusState == SS_OFF) warningTime = millis() + 1000L*60L*3;
+  long warningDuration = millis() < warningTime ? 0 : millis() - warningTime;
+  Serial.println(warningDuration);
+  if(warningDuration > (long)1000L*60L*getVar(MVI_WARNING_PERIOD) && targetOn){
     setStatusState(SS_SHUTDOWN_FLOW_ONLY);
   }
   setLabelText(MLI_STATUS_WARNING, warningString);
