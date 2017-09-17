@@ -21,7 +21,7 @@ void initStatus() {
   stateSetTime = millis();
   warningTime = millis();
   stateSetDateTime = getTime();
-  Serial.begin(9600);
+//  Serial.begin(9600);
 }
 
 void updateStatus() {
@@ -88,7 +88,6 @@ void updateStatus() {
   if (!startTimer) warningTime = millis();
   if (statusState == SS_OFF) warningTime = millis() + 1000L*60L*3;
   long warningDuration = millis() < warningTime ? 0 : millis() - warningTime;
-  Serial.println(warningDuration);
   if(warningDuration > (long)1000L*60L*getVar(MVI_WARNING_PERIOD) && targetOn){
     setStatusState(SS_SHUTDOWN_FLOW_ONLY);
   }

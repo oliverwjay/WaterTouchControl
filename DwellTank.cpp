@@ -8,8 +8,11 @@
 #define TRIG_PIN 28 // Trigger pin
 #define PUMP_RELAY_PIN 44 // Pin to relay for pump
 
+
 #define TOTAL_VOL 12.0
 #define VOL_PER_CM 0.5
+
+bool debugMode = false;
 
 int maximumRange = 200; // Maximum range needed
 int minimumRange = 1; // Minimum range needed
@@ -53,6 +56,9 @@ int getDist() { //Get current distance
 
   //Calculate the distance (in cm) based on the speed of sound.
   distance = duration / 58.2;
+  if(debugMode){
+    distance = ((float)analogRead(A15))/40.0;
+  }
 
   if (distance >= maximumRange || distance <= minimumRange) {
     /* Send a negative number to computer and Turn LED ON
@@ -111,10 +117,17 @@ void resetDists() {
 }
 
 bool isFlowing() {
+  if(index==0){
+  Serial.println(millis()-lastSwitch);
+  Serial.println(oldDists[oldDistsIndex]);
+  Serial.println(oldDists[(oldDistsIndex-1)%50]);
+  Serial.println(oldDists[(oldDistsIndex-25)%50]);
+  Serial.println(oldDists[(oldDistsIndex+2)%50]);
+  }
   if(millis()-lastSwitch < 120000 && lastSwitch > 5000){
     return true;
   }
-  else if(dwellTankState == DTS_INACTIVE && oldDists[oldDistsIndex]!=0 && oldDists[(oldDistsIndex - 1)%50] - oldDists[oldDistsIndex] > 2){
+  else if(dwellTankState == DTS_INACTIVE && oldDists[oldDistsIndex]!=0 && oldDists[oldDistsIndex] - oldDists[(oldDistsIndex - 1)%50] > 2){
     return true;
   }
   else if(dwellTankState == DTS_FLUSHING){
@@ -130,6 +143,11 @@ void initDwellTank() {
   pinMode(PUMP_RELAY_PIN, OUTPUT); // Update pump
   pinMode(ECHO_PIN, INPUT);
   pinMode(TRIG_PIN, OUTPUT);
+  pinMode(DT_JUMP_PIN, INPUT_PULLUP);
+  debugMode = !digitalRead(DT_JUMP_PIN);
+
+  Serial.begin(9600);
+
   turnOffPump(); // Default off
   resetDists(); //Clear dists
 }
@@ -137,10 +155,13 @@ void initDwellTank() {
 void updateDwellTank() { //Loop function to update state and pump
   dists[index] = getDist(); //Check distance
   index = (index + 1) % 50; //Update index
-
   if(index == 0){
+    Serial.print("dist: "); Serial.println(dists[index]);
+    Serial.print("i: "); Serial.println(oldDistsIndex);
+    Serial.print("old dist: "); Serial.println(oldDists[oldDistsIndex]);
     oldDists[oldDistsIndex] = dists[index];
     oldDistsIndex = (oldDistsIndex + 1) % 50;
+    Serial.print("new dist: "); Serial.println(oldDists[(oldDistsIndex-1)%50]);
   }
 
   updateError(SE_DT_NO_FLOW, !isFlowing());
