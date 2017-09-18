@@ -4,6 +4,9 @@
 #include "Monitoring.h"
 #include "Status.h"
 
+//Change this to enable serial debugging of the dwell tank
+#define DEBUG_DWELL_TANK false  //NOTE: serial monitor can only be enabled in one file at a time
+
 #define ECHO_PIN 29 // Echo pin
 #define TRIG_PIN 28 // Trigger pin
 #define PUMP_RELAY_PIN 44 // Pin to relay for pump
@@ -59,6 +62,7 @@ int getDist() { //Get current distance
   distance = duration / 58.2;
   if (debugMode) {
     distance = ((float)analogRead(A15)) / 40.0;
+    if (digitalRead(DT_JUMP_PIN)) distance = -1;
   }
 
   if (distance >= maximumRange || distance <= minimumRange) {
@@ -121,26 +125,24 @@ bool isFlowing() {
   int oldDist = 0;
   int newDist = 0;
   int i = oldDistsIndex;
-  int j = (newDistsIndex - 1) % 50;
-  while (oldDist <= 0 && i != j) {
+  int j = (oldDistsIndex + 49) % 50;
+  while (oldDist < 0 && i != j) { //Finds a valid refrence distance
     oldDist = oldDists[i];
     i = (i + 1) % 50;
   }
-  while (oldDist <= 0 && j != i) {
+  while (oldDist < 0 && j != i) {//Finds a valid recent distance
     newDist = oldDists[i];
-    i = (i + 1) % 50;
+    i = (i + 49) % 50;
   }
-  if (index == 0) {
-    Serial.println(millis() - lastSwitch);
-    Serial.println(oldDists[oldDistsIndex]);
-    Serial.println(oldDists[(oldDistsIndex - 1) % 50]);
-    Serial.println(oldDists[(oldDistsIndex - 25) % 50]);
-    Serial.println(oldDists[(oldDistsIndex + 2) % 50]);
+  if (index == 0 && DEBUG_DWELL_TANK) {
+    Serial.print("ms since last switch: "); Serial.println(millis() - lastSwitch);
+    Serial.print("Reference distance: "); Serial.println(oldDists[oldDistsIndex]);
+    Serial.print("Current distance: ");Serial.println(oldDists[(oldDistsIndex - 1) % 50]);
   }
   if (millis() - lastSwitch < 120000 && lastSwitch > 5000) {
     return true;
   }
-  else if (dwellTankState == DTS_INACTIVE && oldDists[oldDistsIndex] != 0 && oldDists[oldDistsIndex] - oldDists[(oldDistsIndex - 1) % 50] > 2) {
+  else if (dwellTankState == DTS_INACTIVE && oldDists[oldDistsIndex] != 0 && oldDists[oldDistsIndex] - oldDists[(oldDistsIndex + 49) % 50] > 2) {
     return true;
   }
   else if (dwellTankState == DTS_FLUSHING) {
@@ -159,7 +161,9 @@ void initDwellTank() {
   pinMode(DT_JUMP_PIN, INPUT_PULLUP);
   debugMode = !digitalRead(DT_JUMP_PIN);
 
+#if DEBUG_DWELL_TANK==true
   Serial.begin(9600);
+#endif
 
   turnOffPump(); // Default off
   resetDists(); //Clear dists
@@ -169,14 +173,9 @@ void updateDwellTank() { //Loop function to update state and pump
   dists[index] = getDist(); //Check distance
   index = (index + 1) % 50; //Update index
   if (index == 0) {
-    Serial.print("dist: "); Serial.println(dists[index]);
-    Serial.print("i: "); Serial.println(oldDistsIndex);
-    Serial.print("old dist: "); Serial.println(oldDists[oldDistsIndex]);
     oldDists[oldDistsIndex] = dists[index];
     oldDistsIndex = (oldDistsIndex + 1) % 50;
-    Serial.print("new dist: "); Serial.println(oldDists[(oldDistsIndex - 1) % 50]);
   }
-
   updateError(SE_DT_NO_FLOW, !isFlowing());
 
   float level = centralAverage(dists, 3, 46);

@@ -12,20 +12,23 @@
 
 #define SD_CHIP_SELECT 4
 
+// Enable for logging to Serial Monitor
+bool serialLogEnabled = true; //Note only one file can have Serial enabled at once
+
 int phSamples[N_PH_SAMPLES];
 uint8_t phIndex = 0;
 float phValue;
 float phCalibration[6][2] = {{ -1, -3.5}, { -2, -7}, {1.68, 0}, {4.0, 0}, {7.0, 0}, {10.0, 0}};
 DateTime lastLog = DateTime(0);
 
-bool serialLogEnabled = true;
-
 void initMonitoring() {
   if (!SD.begin(SD_CHIP_SELECT)) {
 
   }
   lastLog = getTime();
-//  Serial.begin(9600);
+  if(serialLogEnabled) {
+    Serial.begin(9600);
+  }
 }
 
 void updateMonitoring() {
@@ -132,6 +135,8 @@ bool logText(String text){
   String toSave = String(logTime.hour());
   toSave += ":";
   toSave += String(logTime.minute());
+  toSave += ":";
+  toSave += String(logTime.second());
   toSave += " ";
   toSave += text;
 

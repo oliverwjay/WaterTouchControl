@@ -36,5 +36,6 @@ void updateStatus();
 void setStatusState(StatusState state);
 StatusState getStatusState();
 void updateError(SErrorI error, bool isError);
+void updateError(SErrorI error, SErrorState isError);
 
 #endif

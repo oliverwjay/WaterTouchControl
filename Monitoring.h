@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 
-
 void initMonitoring();
 void updateMonitoring();
 float centralAverage(int vals[], uint8_t lowIndex, uint8_t highIndex);

@@ -21,7 +21,7 @@ void initStatus() {
   stateSetTime = millis();
   warningTime = millis();
   stateSetDateTime = getTime();
-//  Serial.begin(9600);
+  //  Serial.begin(9600);
 }
 
 void updateStatus() {
@@ -42,7 +42,7 @@ void updateStatus() {
         }
         break;
       case SS_STARTUP_PS_RELAY:
-        if (millis() - stateSetTime > 1000L * 60L *getVar(MVI_WOOL_DELAY)) { //One zero removed for testing
+        if (millis() - stateSetTime > 1000L * 60L * getVar(MVI_WOOL_DELAY)) { //One zero removed for testing
           setStatusState(SS_RUNNING);
         }
         break;
@@ -74,21 +74,21 @@ void updateStatus() {
   }
   warningString = "";
   bool startTimer = false;
-  for (int i =0; i < SE_N_ERRORS; i++){
-    if (errorStates[i] == SES_ERROR || errorStates[i] == SES_TEXT_ONLY){
+  for (int i = 0; i < SE_N_ERRORS; i++) {
+    if (errorStates[i] == SES_ERROR || errorStates[i] == SES_TEXT_ONLY) {
       warningString += errorText[i];
     }
     if (errorStates[i] == SES_ERROR) {
       startTimer = true;
     }
   }
-  if (warningString == ""){
+  if (warningString == "") {
     warningString = "No issues";
   }
   if (!startTimer) warningTime = millis();
-  if (statusState == SS_OFF) warningTime = millis() + 1000L*60L*3;
+  if (statusState == SS_OFF) warningTime = millis() + 1000L * 60L * 3;
   long warningDuration = millis() < warningTime ? 0 : millis() - warningTime;
-  if(warningDuration > (long)1000L*60L*getVar(MVI_WARNING_PERIOD) && targetOn){
+  if (warningDuration > (long)1000L * 60L * getVar(MVI_WARNING_PERIOD) && targetOn) {
     setStatusState(SS_SHUTDOWN_FLOW_ONLY);
   }
   setLabelText(MLI_STATUS_WARNING, warningString);
@@ -105,14 +105,28 @@ void setStatusState(StatusState state) {
   stateSetTime = millis();
   stateSetDateTime = getTime();
   setLabelText(MLI_STATUS_STATE, statusStateName[state]);
+  logText(statusStateName[state]);
 }
 
 StatusState getStatusState() {
   return statusState;
 }
 
-void updateError(SErrorI error, bool isError) {
-  if(errorStates[error] != SES_IGNORE){
-  	errorStates[error] = isError ? SES_ERROR : SES_NORMAL;
+void updateError(SErrorI error, SErrorState isError) {
+  if (errorStates[error] != isError && errorStates[error] != SES_IGNORE) {
+    String toLog = "";
+    toLog += errorText[error];
+    errorStates[error] = isError;
+    if (isError == SES_NORMAL) {
+      toLog += " [RESOLVED]:";
+    }
+    logText(toLog);
   }
 }
+
+void updateError(SErrorI error, bool isError){
+  if (errorStates[error] != SES_IGNORE) {
+    updateError(error, isError ? SES_ERROR : SES_NORMAL);
+  }
+}
+
