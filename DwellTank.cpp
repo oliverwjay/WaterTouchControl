@@ -8,6 +8,7 @@
 #define TRIG_PIN 28 // Trigger pin
 #define PUMP_RELAY_PIN 44 // Pin to relay for pump
 
+#define DT_JUMP_PIN 22
 
 #define TOTAL_VOL 12.0
 #define VOL_PER_CM 0.5
@@ -56,8 +57,8 @@ int getDist() { //Get current distance
 
   //Calculate the distance (in cm) based on the speed of sound.
   distance = duration / 58.2;
-  if(debugMode){
-    distance = ((float)analogRead(A15))/40.0;
+  if (debugMode) {
+    distance = ((float)analogRead(A15)) / 40.0;
   }
 
   if (distance >= maximumRange || distance <= minimumRange) {
@@ -117,20 +118,32 @@ void resetDists() {
 }
 
 bool isFlowing() {
-  if(index==0){
-  Serial.println(millis()-lastSwitch);
-  Serial.println(oldDists[oldDistsIndex]);
-  Serial.println(oldDists[(oldDistsIndex-1)%50]);
-  Serial.println(oldDists[(oldDistsIndex-25)%50]);
-  Serial.println(oldDists[(oldDistsIndex+2)%50]);
+  int oldDist = 0;
+  int newDist = 0;
+  int i = oldDistsIndex;
+  int j = (newDistsIndex - 1) % 50;
+  while (oldDist <= 0 && i != j) {
+    oldDist = oldDists[i];
+    i = (i + 1) % 50;
   }
-  if(millis()-lastSwitch < 120000 && lastSwitch > 5000){
+  while (oldDist <= 0 && j != i) {
+    newDist = oldDists[i];
+    i = (i + 1) % 50;
+  }
+  if (index == 0) {
+    Serial.println(millis() - lastSwitch);
+    Serial.println(oldDists[oldDistsIndex]);
+    Serial.println(oldDists[(oldDistsIndex - 1) % 50]);
+    Serial.println(oldDists[(oldDistsIndex - 25) % 50]);
+    Serial.println(oldDists[(oldDistsIndex + 2) % 50]);
+  }
+  if (millis() - lastSwitch < 120000 && lastSwitch > 5000) {
     return true;
   }
-  else if(dwellTankState == DTS_INACTIVE && oldDists[oldDistsIndex]!=0 && oldDists[oldDistsIndex] - oldDists[(oldDistsIndex - 1)%50] > 2){
+  else if (dwellTankState == DTS_INACTIVE && oldDists[oldDistsIndex] != 0 && oldDists[oldDistsIndex] - oldDists[(oldDistsIndex - 1) % 50] > 2) {
     return true;
   }
-  else if(dwellTankState == DTS_FLUSHING){
+  else if (dwellTankState == DTS_FLUSHING) {
     return true;
   }
   else {
@@ -155,33 +168,33 @@ void initDwellTank() {
 void updateDwellTank() { //Loop function to update state and pump
   dists[index] = getDist(); //Check distance
   index = (index + 1) % 50; //Update index
-  if(index == 0){
+  if (index == 0) {
     Serial.print("dist: "); Serial.println(dists[index]);
     Serial.print("i: "); Serial.println(oldDistsIndex);
     Serial.print("old dist: "); Serial.println(oldDists[oldDistsIndex]);
     oldDists[oldDistsIndex] = dists[index];
     oldDistsIndex = (oldDistsIndex + 1) % 50;
-    Serial.print("new dist: "); Serial.println(oldDists[(oldDistsIndex-1)%50]);
+    Serial.print("new dist: "); Serial.println(oldDists[(oldDistsIndex - 1) % 50]);
   }
 
   updateError(SE_DT_NO_FLOW, !isFlowing());
-  
+
   float level = centralAverage(dists, 3, 46);
 
   updateError(SE_DT_BAD_READING, level == -1);
 
   setVar(MVI_DT_CURRENT_VOL, cmToVol(level)); //Update user interface
 
-  if(level==-1){
+  if (level == -1) {
     return;
   }
 
   updateError(SE_DT_OVERFLOW, level < volToCm(getVar(MVI_DT_ESTOP_VOL)));
-  
-  if (level < volToCm(getVar(MVI_DT_MAX_VOL)) && dwellTankState == DTS_INACTIVE && millis()-lastSwitch>2000) {
+
+  if (level < volToCm(getVar(MVI_DT_MAX_VOL)) && dwellTankState == DTS_INACTIVE && millis() - lastSwitch > 2000) {
     setPumpState(DTS_FLUSHING);
   }
-  else if (level > volToCm(getVar(MVI_DT_MIN_VOL)) && dwellTankState == DTS_FLUSHING && millis()-lastSwitch>2000){
+  else if (level > volToCm(getVar(MVI_DT_MIN_VOL)) && dwellTankState == DTS_FLUSHING && millis() - lastSwitch > 2000) {
     setPumpState(DTS_INACTIVE);
   }
 

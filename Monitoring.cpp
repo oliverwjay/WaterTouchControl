@@ -18,6 +18,8 @@ float phValue;
 float phCalibration[6][2] = {{ -1, -3.5}, { -2, -7}, {1.68, 0}, {4.0, 0}, {7.0, 0}, {10.0, 0}};
 DateTime lastLog = DateTime(0);
 
+bool serialLogEnabled = true;
+
 void initMonitoring() {
   if (!SD.begin(SD_CHIP_SELECT)) {
 
@@ -110,6 +112,41 @@ bool saveArray(float ar [], int len, String filename, String header) {
     if (needsHeader) saveFile.println(header);
     saveFile.println(toSave);
     saveFile.close();
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+bool logText(String text){
+  DateTime logTime = getTime();
+  String filename = "";
+  filename += String(logTime.month());
+  filename += "_";
+  filename += String(logTime.day());
+  filename += "_";
+  filename += String(logTime.year());
+  filename += "_Run_Log.txt";
+
+  String toSave = String(logTime.hour());
+  toSave += ":";
+  toSave += String(logTime.minute());
+  toSave += " ";
+  toSave += text;
+
+  if (serialLogEnabled) {
+    Serial.println(toSave);
+  }
+
+  File saveFile = SD.open(filename, FILE_WRITE);
+
+  if (saveFile) {
+    saveFile.println(toSave);
+    return true;
+  }
+  else {
+    return false;
   }
 }
 
