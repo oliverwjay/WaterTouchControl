@@ -14,6 +14,7 @@
 
 #include  "Menu.h"
 #include "Schedule.h"
+#include "Monitoring.h"
 
 // The control pins for the LCD can be assigned to any digital or
 // analog pins...but we'll use the analog pins as this allows us to
@@ -116,17 +117,19 @@ void initMenu() {
   tft.drawFastHLine(0, TAB_HEIGHT - 2, 480, LINE_COLOR);
   tft.setTextColor(TEXT_COLOR);
 
-  //Serial.begin(9600);
 
   tabs[MTI_STATUS] = new MTab("Status", MTI_STATUS);
+  
   tabs[MTI_FLOW] = new MTab("Flow", MTI_FLOW);
   tabs[MTI_POWER] = new MTab("Power", MTI_POWER);
   tabs[MTI_WOOL_FEED] = new MTab("Wool Feed", MTI_WOOL_FEED);
   tabs[MTI_DWELL_TANK] = new MTab("Dwell Tank", MTI_DWELL_TANK);
   tabs[MTI_MONITORING] = new MTab("Monitoring", MTI_MONITORING);
   tabs[MTI_SCHEDULE] = new MTab("Schedule", MTI_SCHEDULE);
+  
 
   timeVars[MTVI_CURRENT_TIME] = new MTimeVar(MTVI_CURRENT_TIME, MTI_ALL, MTVT_FULL_TIME, false, 6, ROW_OFFSET - TAB_HEIGHT, MVS_EDITING);
+  
 
   labels[MLI_STATUS_WARNING] = new MLabel(MLI_STATUS_WARNING, MTI_ALL, "No issues", 150,  ROW_OFFSET - TAB_HEIGHT);
 
@@ -167,7 +170,7 @@ void initMenu() {
   labels[MLI_WF_POWER] = new MLabel(MLI_WF_POWER, MTI_WOOL_FEED, "Power", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT *2);
   vars[MVI_WF_PWR] = new MVar(MVI_WF_PWR, MTI_WOOL_FEED, " (0-255)", 0, true, TAB_WIDTH + 82, ROW_OFFSET + TAB_HEIGHT * 2, MVS_EDITING);
   labels[MLI_WF_PERIOD] = new MLabel(MLI_WF_PERIOD, MTI_WOOL_FEED, "Adjust every", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT *3);
-  vars[MVI_WF_PERIOD] = new MVar(MVI_WF_PWR, MTI_WOOL_FEED, "min", 1, true, TAB_WIDTH + 166, ROW_OFFSET + TAB_HEIGHT * 3, MVS_EDITING);
+  vars[MVI_WF_PERIOD] = new MVar(MVI_WF_PERIOD, MTI_WOOL_FEED, "min", 1, true, TAB_WIDTH + 166, ROW_OFFSET + TAB_HEIGHT * 3, MVS_EDITING);
   labels[MLI_WF_REV_TIME] = new MLabel(MLI_WF_REV_TIME, MTI_WOOL_FEED, "Retract for", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT *4);
   vars[MVI_WF_REV_TIME] = new MVar(MVI_WF_REV_TIME, MTI_WOOL_FEED, "s", 0, true, TAB_WIDTH + 154, ROW_OFFSET + TAB_HEIGHT * 4, MVS_EDITING);
   vars[MVI_WF_ANALOG_IN] = new MVar(MVI_WF_ANALOG_IN, MTI_WOOL_FEED, "", 0, false, TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT * 5);
