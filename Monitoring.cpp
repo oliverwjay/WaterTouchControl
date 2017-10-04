@@ -12,6 +12,10 @@
 
 #define SD_CHIP_SELECT 4
 
+extern unsigned int __bss_end;
+extern unsigned int __heap_start;
+extern void *__brkval;
+
 // Enable for logging to Serial Monitor
 bool serialLogEnabled = true; //Note only one file can have Serial enabled at once
 
@@ -40,12 +44,17 @@ void updateMonitoring() {
   phIndex %= N_PH_SAMPLES;
 
   bool loggingEnabled = getVar(MVI_M_LOGGING_SWITCH);
-  if ((getTime() - TimeSpan(0, 0, 0, 10)).secondstime() > lastLog.secondstime() && loggingEnabled) {
+  if (getTime().secondstime() - 60 > lastLog.secondstime()) {
+    String toPrint = "Memory free: ";
+    toPrint += freeMemory();
+    logText(toPrint);
+    if (!loggingEnabled) lastLog = getTime();
+  }
+  if (getTime().secondstime() - 60 > lastLog.secondstime() && loggingEnabled) {
     float save[3] = {getTime().secondstime(), getVoltage(), getCurrent()};
     bool a = saveArray(save, 3, String("datalog.csv"), String("Time, Voltage, Current"));
     lastLog = getTime();
   }
-
 }
 
 float centralAverage(int vals[], uint8_t lowIndex, uint8_t highIndex) {
@@ -155,4 +164,14 @@ bool logText(String text){
   }
 }
 
+int freeMemory() {
+  int free_memory;
+
+  if((int)__brkval == 0)
+     free_memory = ((int)&free_memory) - ((int)&__bss_end);
+  else
+    free_memory = ((int)&free_memory) - ((int)__brkval);
+
+  return free_memory;
+}
 

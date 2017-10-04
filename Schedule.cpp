@@ -76,7 +76,7 @@ void updateSchedule(){
 }
 
 DateTime getTime(){
-	return rtc.now();
+	return currentTime;
 }
 
 void setShutdown(DateTime _shutdownTime){
