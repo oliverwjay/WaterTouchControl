@@ -24,13 +24,14 @@ uint8_t phIndex = 0;
 float phValue;
 float phCalibration[6][2] = {{ -1, -3.5}, { -2, -7}, {1.68, 0}, {4.0, 0}, {7.0, 0}, {10.0, 0}};
 DateTime lastLog = DateTime(0);
+long leastMemory = 5000;
 
 void initMonitoring() {
   if (!SD.begin(SD_CHIP_SELECT)) {
 
   }
   lastLog = getTime();
-  if(serialLogEnabled) {
+  if (serialLogEnabled) {
     Serial.begin(9600);
   }
 }
@@ -44,13 +45,13 @@ void updateMonitoring() {
   phIndex %= N_PH_SAMPLES;
 
   bool loggingEnabled = getVar(MVI_M_LOGGING_SWITCH);
-  if (getTime().secondstime() - 60 > lastLog.secondstime()) {
+  if (getTime().secondstime() - 30 > lastLog.secondstime()) {
     String toPrint = "Memory free: ";
-    toPrint += freeMemory();
+    toPrint += leastMemory;
     logText(toPrint);
     if (!loggingEnabled) lastLog = getTime();
   }
-  if (getTime().secondstime() - 60 > lastLog.secondstime() && loggingEnabled) {
+  if (getTime().secondstime() - 30 > lastLog.secondstime() && loggingEnabled) {
     float save[3] = {getTime().secondstime(), getVoltage(), getCurrent()};
     bool a = saveArray(save, 3, String("datalog.csv"), String("Time, Voltage, Current"));
     lastLog = getTime();
@@ -131,7 +132,7 @@ bool saveArray(float ar [], int len, String filename, String header) {
   }
 }
 
-bool logText(String text){
+bool logText(String text) {
   DateTime logTime = getTime();
   String filename = "";
   filename += String(logTime.month());
@@ -167,11 +168,21 @@ bool logText(String text){
 int freeMemory() {
   int free_memory;
 
-  if((int)__brkval == 0)
-     free_memory = ((int)&free_memory) - ((int)&__bss_end);
+  if ((int)__brkval == 0)
+    free_memory = ((int)&free_memory) - ((int)&__bss_end);
   else
     free_memory = ((int)&free_memory) - ((int)__brkval);
 
   return free_memory;
+}
+
+void checkMemory() {
+  int free_memory = freeMemory();
+  if (free_memory < leastMemory) {
+    leastMemory = free_memory;
+    String toPrint = "Min Memory: ";
+    toPrint += leastMemory;
+    logText(toPrint);
+  }
 }
 

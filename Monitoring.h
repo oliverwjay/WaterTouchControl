@@ -10,5 +10,6 @@ float interpolateValue(float rawValue, float c[6][2]);
 bool saveArray(float ar [], int len, String filename, String header);
 bool logText(String text);
 int freeMemory();
+void checkMemory();
 
 #endif

@@ -135,9 +135,9 @@ bool isFlowing() {
     i = (i + 49) % 50;
   }
   if (index == 0 && DEBUG_DWELL_TANK) {
-    Serial.print("ms since last switch: "); Serial.println(millis() - lastSwitch);
-    Serial.print("Reference distance: "); Serial.println(oldDists[oldDistsIndex]);
-    Serial.print("Current distance: ");Serial.println(oldDists[(oldDistsIndex - 1) % 50]);
+    Serial.print(F("ms since last switch: ")); Serial.println(millis() - lastSwitch);
+    Serial.print(F("Reference distance: ")); Serial.println(oldDists[oldDistsIndex]);
+    Serial.print(F("Current distance: "));Serial.println(oldDists[(oldDistsIndex - 1) % 50]);
   }
   if (millis() - lastSwitch < 120000 && lastSwitch > 5000) {
     return true;

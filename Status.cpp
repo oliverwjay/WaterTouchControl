@@ -93,6 +93,7 @@ void updateStatus() {
   }
   setLabelText(MLI_STATUS_WARNING, warningString);
   setTimeVar(MTVI_STATE_TIME, stateSetDateTime);
+  checkMemory();
 }
 
 void setStatusState(StatusState state) {

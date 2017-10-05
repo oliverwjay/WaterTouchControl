@@ -16,6 +16,8 @@
 #include "Schedule.h"
 #include "Monitoring.h"
 
+#define WASTED_MEMORY 0 //Set to zero for normal opperation set to higher (eg 23) to add memory pressure
+
 // The control pins for the LCD can be assigned to any digital or
 // analog pins...but we'll use the analog pins as this allows us to
 // double up the pins with the touch screen (see the TFT paint example).
@@ -119,17 +121,17 @@ void initMenu() {
 
 
   tabs[MTI_STATUS] = new MTab("Status", MTI_STATUS);
-  
+
   tabs[MTI_FLOW] = new MTab("Flow", MTI_FLOW);
   tabs[MTI_POWER] = new MTab("Power", MTI_POWER);
   tabs[MTI_WOOL_FEED] = new MTab("Wool Feed", MTI_WOOL_FEED);
   tabs[MTI_DWELL_TANK] = new MTab("Dwell Tank", MTI_DWELL_TANK);
   tabs[MTI_MONITORING] = new MTab("Monitoring", MTI_MONITORING);
   tabs[MTI_SCHEDULE] = new MTab("Schedule", MTI_SCHEDULE);
-  
+
 
   timeVars[MTVI_CURRENT_TIME] = new MTimeVar(MTVI_CURRENT_TIME, MTI_ALL, MTVT_FULL_TIME, false, 6, ROW_OFFSET - TAB_HEIGHT, MVS_EDITING);
-  
+
 
   labels[MLI_STATUS_WARNING] = new MLabel(MLI_STATUS_WARNING, MTI_ALL, "No issues", 150,  ROW_OFFSET - TAB_HEIGHT);
 
@@ -167,11 +169,11 @@ void initMenu() {
   vars[MVI_WF_SWITCH] = new MSwitch(MVI_WF_SWITCH, MTI_WOOL_FEED, "Off", "On", 0, false, TAB_WIDTH + 10, ROW_OFFSET);
   labels[MLI_WF_FWD] = new MLabel(MLI_WF_FWD, MTI_WOOL_FEED, "Man. Forward", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT);
   labels[MLI_WF_REV] = new MLabel(MLI_WF_REV, MTI_WOOL_FEED, "Man. Reverse", TAB_WIDTH + 160, ROW_OFFSET + TAB_HEIGHT);
-  labels[MLI_WF_POWER] = new MLabel(MLI_WF_POWER, MTI_WOOL_FEED, "Power", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT *2);
+  labels[MLI_WF_POWER] = new MLabel(MLI_WF_POWER, MTI_WOOL_FEED, "Power", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT * 2);
   vars[MVI_WF_PWR] = new MVar(MVI_WF_PWR, MTI_WOOL_FEED, " (0-255)", 0, true, TAB_WIDTH + 82, ROW_OFFSET + TAB_HEIGHT * 2, MVS_EDITING);
-  labels[MLI_WF_PERIOD] = new MLabel(MLI_WF_PERIOD, MTI_WOOL_FEED, "Adjust every", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT *3);
+  labels[MLI_WF_PERIOD] = new MLabel(MLI_WF_PERIOD, MTI_WOOL_FEED, "Adjust every", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT * 3);
   vars[MVI_WF_PERIOD] = new MVar(MVI_WF_PERIOD, MTI_WOOL_FEED, "min", 1, true, TAB_WIDTH + 166, ROW_OFFSET + TAB_HEIGHT * 3, MVS_EDITING);
-  labels[MLI_WF_REV_TIME] = new MLabel(MLI_WF_REV_TIME, MTI_WOOL_FEED, "Retract for", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT *4);
+  labels[MLI_WF_REV_TIME] = new MLabel(MLI_WF_REV_TIME, MTI_WOOL_FEED, "Retract for", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT * 4);
   vars[MVI_WF_REV_TIME] = new MVar(MVI_WF_REV_TIME, MTI_WOOL_FEED, "s", 0, true, TAB_WIDTH + 154, ROW_OFFSET + TAB_HEIGHT * 4, MVS_EDITING);
   vars[MVI_WF_ANALOG_IN] = new MVar(MVI_WF_ANALOG_IN, MTI_WOOL_FEED, "", 0, false, TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT * 5);
   vars[MVI_WF_THRESHOLD] = new MVar(MVI_WF_THRESHOLD, MTI_WOOL_FEED, "", 0, true, TAB_WIDTH + 190, ROW_OFFSET + TAB_HEIGHT * 5, MVS_EDITING);
@@ -187,23 +189,23 @@ void initMenu() {
   labels[MLI_M_10] = new MLabel(MLI_M_10, MTI_MONITORING, "10.0", TAB_WIDTH + 190, ROW_OFFSET + 2 * TAB_HEIGHT);
   labels[MLI_M_CLEAR] = new MLabel(MLI_M_CLEAR, MTI_MONITORING, "Clear", TAB_WIDTH + 250, ROW_OFFSET + 2 * TAB_HEIGHT);
 
-  vars[MVI_M_LOGGING_SWITCH] = new MSwitch(MVI_M_LOGGING_SWITCH, MTI_MONITORING, "Off", "On", 0, false, TAB_WIDTH + 190, ROW_OFFSET+TAB_HEIGHT*4);
-  labels[MLI_M_LOG] = new MLabel(MLI_M_LOG, MTI_MONITORING, "Datalogging", TAB_WIDTH + 10, ROW_OFFSET+TAB_HEIGHT*4);
+  vars[MVI_M_LOGGING_SWITCH] = new MSwitch(MVI_M_LOGGING_SWITCH, MTI_MONITORING, "Off", "On", 0, false, TAB_WIDTH + 190, ROW_OFFSET + TAB_HEIGHT * 4);
+  labels[MLI_M_LOG] = new MLabel(MLI_M_LOG, MTI_MONITORING, "Datalogging", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT * 4);
 
   vars[MVI_FLOW_RATE]->value = .9;
 
   timeVars[MTVI_S_SHUTDOWN_TIME] = new MTimeVar(MTVI_S_SHUTDOWN_TIME, MTI_SCHEDULE, MTVT_DATE_TIME, true, TAB_WIDTH + 130, ROW_OFFSET + TAB_HEIGHT, MVS_EDITING);
   timeVars[MTVI_S_STARTUP_TIME] = new MTimeVar(MTVI_S_STARTUP_TIME, MTI_SCHEDULE, MTVT_DATE_TIME, true, TAB_WIDTH + 130, ROW_OFFSET + 2 * TAB_HEIGHT, MVS_EDITING);
-  vars[MVI_WOOL_DELAY] = new MVar(MVI_WOOL_DELAY, MTI_SCHEDULE, "min", 0, true, TAB_WIDTH + 142, ROW_OFFSET+ TAB_HEIGHT *4, MVS_EDITING);
-  
+  vars[MVI_WOOL_DELAY] = new MVar(MVI_WOOL_DELAY, MTI_SCHEDULE, "min", 0, true, TAB_WIDTH + 142, ROW_OFFSET + TAB_HEIGHT * 4, MVS_EDITING);
+
   labels[MLI_S_SHUTDOWN] = new MLabel(MLI_S_SHUTDOWN, MTI_SCHEDULE, "Shutdown:", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT);
   labels[MLI_S_STARTUP] = new MLabel(MLI_S_STARTUP, MTI_SCHEDULE, "Startup:", TAB_WIDTH + 10, ROW_OFFSET + 2 * TAB_HEIGHT);
-  labels[MLI_S_WOOL_DELAY] = new MLabel(MLI_S_WOOL_DELAY, MTI_SCHEDULE, "Iron delay", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT*4);
+  labels[MLI_S_WOOL_DELAY] = new MLabel(MLI_S_WOOL_DELAY, MTI_SCHEDULE, "Iron delay", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT * 4);
 
   labels[MLI_S_STATUS] = new MLabel(MLI_S_STATUS, MTI_STATUS, "Nothing Scheduled", TAB_WIDTH + 10, ROW_OFFSET + 6 * TAB_HEIGHT);
 
   vars[MVI_WARNING_PERIOD] = new MVar(MVI_WARNING_PERIOD, MTI_SCHEDULE, "min", 0, true, TAB_WIDTH + 154, ROW_OFFSET + TAB_HEIGHT * 5, MVS_EDITING);
-  labels[MLI_WARNING_PERIOD] = new MLabel(MLI_WARNING_PERIOD, MTI_SCHEDULE, "EStop delay", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT *5);
+  labels[MLI_WARNING_PERIOD] = new MLabel(MLI_WARNING_PERIOD, MTI_SCHEDULE, "EStop delay", TAB_WIDTH + 10, ROW_OFFSET + TAB_HEIGHT * 5);
 
   //  vars[MVI_TIME] = new MVar(MVI_TIME, MTI_SCHEDULE, "s", 0, false, 250, 75, MVS_VISABLE);
   //  vars[MVI_TEST] = new MVar(MVI_TEST, MTI_POWER, "V", 2, false, 150, 200, MVS_EDITING, 150, 150);;
@@ -237,6 +239,14 @@ void updateMenu(int endTime) {
     priorityIndex = showIndex;
   }
 
+#if WASTED_MEMORY > 0
+  String strings[20];
+  for (int i = 0; i < WASTED_MEMORY; i++) {
+    strings[i] = "This string is long to test wasting memory to simulate crash";
+    checkMemory();
+  }
+#endif
+
   isEditing = false;
   lastDigit = digit;
   digit = getButton();
@@ -263,6 +273,7 @@ void updateMenu(int endTime) {
       priority = MP_LOW;
     }
   }
+  checkMemory();
 }
 
 void updateTouch() {
@@ -577,6 +588,7 @@ void MVar::show(MPriority _priority) {
     lastViewState = viewState;
     valueChanged = false;
   }
+  checkMemory();
 }
 
 void MVar::setValue(float _value) {
@@ -587,6 +599,7 @@ void MVar::setValue(float _value) {
       EEPROM.put(addressOfVar(index), value); // Store in memory
     }
   }
+  checkMemory();
 }
 
 void MVar::updateTemp(int nextDigit) {
@@ -845,6 +858,7 @@ void MTimeVar::show(MPriority _priority) {
     lastViewState = viewState;
     valueChanged = false;
   }
+  checkMemory();
 }
 
 DateTime MTimeVar::getValue() {
@@ -867,6 +881,7 @@ void MTimeVar::setValue(DateTime _time) {
       valueChanged = true;
     }
   }
+  checkMemory();
 }
 
 void MTimeVar::updateTemp(int nextDigit) {
