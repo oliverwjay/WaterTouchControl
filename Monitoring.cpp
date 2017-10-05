@@ -49,6 +49,7 @@ void updateMonitoring() {
     String toPrint = "Memory free: ";
     toPrint += leastMemory;
     logText(toPrint);
+    logText(String(getTime().secondstime()));
     if (!loggingEnabled) lastLog = getTime();
   }
   if (getTime().secondstime() - 30 > lastLog.secondstime() && loggingEnabled) {

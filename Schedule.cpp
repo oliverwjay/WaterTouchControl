@@ -10,34 +10,36 @@ DateTime shutdownTime;
 DateTime startupTime;
 DateTime currentTime;
 
-void initSchedule(){
-	shutdownTime = DateTime(0);
-	startupTime = DateTime(0);
+void initSchedule() {
+  shutdownTime = DateTime(0);
+  startupTime = DateTime(0);
   rtc.begin();
   currentTime = rtc.now();
   setTimeVar(MTVI_CURRENT_TIME, currentTime);
 }
 
-bool isTime(DateTime _time){
-  return (floor(_time.year()/100.0)==20);
+bool isTime(DateTime _time) {
+  return (floor(_time.year() / 100.0) == 20);
 }
 
-void updateSchedule(){
-  if (getTimeVar(MTVI_CURRENT_TIME).secondstime() != currentTime.secondstime()){
+void updateSchedule() {
+  if (getTimeVar(MTVI_CURRENT_TIME).secondstime() != currentTime.secondstime()) {
     rtc.adjust(getTimeVar(MTVI_CURRENT_TIME));
   }
-  currentTime = rtc.now();
+  DateTime tempTime = rtc.now();
+  if (tempTime.year() == currentTime.year() || tempTime.year() == currentTime.year() + 1) currentTime = tempTime;
+
   setTimeVar(MTVI_CURRENT_TIME, currentTime);
-	startupTime = getTimeVar(MTVI_S_STARTUP_TIME);
-	shutdownTime = getTimeVar(MTVI_S_SHUTDOWN_TIME);
+  startupTime = getTimeVar(MTVI_S_STARTUP_TIME);
+  shutdownTime = getTimeVar(MTVI_S_SHUTDOWN_TIME);
 
   String statusText = "";
-  if (!isTime(startupTime) && !isTime(shutdownTime)){
+  if (!isTime(startupTime) && !isTime(shutdownTime)) {
     statusText += "Nothing Scheduled";
   }
   else {
     DateTime nextChange;
-    if (!isTime(shutdownTime) || (isTime(startupTime) && startupTime.secondstime() < shutdownTime.secondstime())){
+    if (!isTime(shutdownTime) || (isTime(startupTime) && startupTime.secondstime() < shutdownTime.secondstime())) {
       statusText += "Startup in: ";
       nextChange = startupTime;
     }
@@ -46,15 +48,15 @@ void updateSchedule(){
       nextChange = shutdownTime;
     }
     TimeSpan timeToChange = TimeSpan(nextChange - currentTime);
-    if (timeToChange.days() != 0){
+    if (timeToChange.days() != 0) {
       statusText += timeToChange.days();
       statusText += " days";
     }
-    else if (timeToChange.hours() != 0){
+    else if (timeToChange.hours() != 0) {
       statusText += timeToChange.hours();
       statusText += " hours";
     }
-    else if (timeToChange.minutes() != 0){
+    else if (timeToChange.minutes() != 0) {
       statusText += timeToChange.minutes();
       statusText += " minutes";
     }
@@ -64,47 +66,47 @@ void updateSchedule(){
     }
   }
   setLabelText(MLI_S_STATUS, statusText);
-  
-	if (isTime(startupTime) && currentTime.secondstime() > startupTime.secondstime()){
-		setVar(MVI_STATUS_SWITCH, 1);
-		setStartup(DateTime(0));
-	}
-	else if (isTime(shutdownTime) && currentTime.secondstime() > shutdownTime.secondstime()){
-		setVar(MVI_STATUS_SWITCH, 0);
-		setShutdown(DateTime(0));
-	}
+
+  if (isTime(startupTime) && currentTime.secondstime() > startupTime.secondstime()) {
+    setVar(MVI_STATUS_SWITCH, 1);
+    setStartup(DateTime(0));
+  }
+  else if (isTime(shutdownTime) && currentTime.secondstime() > shutdownTime.secondstime()) {
+    setVar(MVI_STATUS_SWITCH, 0);
+    setShutdown(DateTime(0));
+  }
 }
 
-DateTime getTime(){
-	return currentTime;
+DateTime getTime() {
+  return currentTime;
 }
 
-void setShutdown(DateTime _shutdownTime){
-	shutdownTime = _shutdownTime;
-	setTimeVar(MTVI_S_SHUTDOWN_TIME, DateTime(0));
+void setShutdown(DateTime _shutdownTime) {
+  shutdownTime = _shutdownTime;
+  setTimeVar(MTVI_S_SHUTDOWN_TIME, DateTime(0));
 }
 
-void setStartup(DateTime _startupTime){
-	startupTime = _startupTime;
-	setTimeVar(MTVI_S_STARTUP_TIME, DateTime(0));
+void setStartup(DateTime _startupTime) {
+  startupTime = _startupTime;
+  setTimeVar(MTVI_S_STARTUP_TIME, DateTime(0));
 }
 
 int replaceDigit(int in, int d, int v) {
   int ret;
-  if (d == 0){
-    ret = in - in%100 + v*10 +in%10;
+  if (d == 0) {
+    ret = in - in % 100 + v * 10 + in % 10;
   }
   else {
-    ret = in - in%10 + v;
+    ret = in - in % 10 + v;
   }
   return ret;
 }
 
 DateTime replaceTimeDigit(DateTime dt, int d, int v) {
-  uint8_t seg = floor(d/2);
-  uint8_t seg_d = d%2;
+  uint8_t seg = floor(d / 2);
+  uint8_t seg_d = d % 2;
   DateTime ret;
-  switch (seg){
+  switch (seg) {
     case 0:
       ret = DateTime(dt.year(), replaceDigit(dt.month(), seg_d, v), dt.day(), dt.hour(), dt.minute(), 0);
       break;
