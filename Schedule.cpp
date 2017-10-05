@@ -13,7 +13,11 @@ DateTime currentTime;
 void initSchedule() {
   shutdownTime = DateTime(0);
   startupTime = DateTime(0);
+  DateTime compileTime = DateTime(F(__DATE__), F(__TIME__));
   rtc.begin();
+  if (! rtc.isrunning() || rtc.now().year() != compileTime.year()) {
+    rtc.adjust(compileTime);
+  }
   currentTime = rtc.now();
   setTimeVar(MTVI_CURRENT_TIME, currentTime);
 }
