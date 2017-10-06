@@ -106,6 +106,7 @@ enum MColor { // Assign human-readable names to some common 16-bit color values:
   YELLOW  = 0xFFE0,
   WHITE   = 0xFFFF,
   GRAY    = 0x7BEF,
+  ORANGE  = 0b1111110001000000,
   LIGHT_GRAY = 0b1100011000011000
 };
 

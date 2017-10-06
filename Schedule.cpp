@@ -23,7 +23,14 @@ void initSchedule() {
 }
 
 bool isTime(DateTime _time) {
-  return (floor(_time.year() / 100.0) == 20);
+  bool ret = true;
+  ret &= floor(_time.year() / 100.0) == 20;
+  ret &= _time.month() <= 12;
+  ret &= _time.day() <= 31;
+  ret &= _time.hour() <= 24;
+  ret &= _time.minute() < 60;
+  ret &= _time.second() < 60;
+  return ret;
 }
 
 void updateSchedule() {
@@ -31,7 +38,7 @@ void updateSchedule() {
     rtc.adjust(getTimeVar(MTVI_CURRENT_TIME));
   }
   DateTime tempTime = rtc.now();
-  if (tempTime.year() == currentTime.year() || tempTime.year() == currentTime.year() + 1) currentTime = tempTime;
+  if (isTime(tempTime) && abs(tempTime.secondstime() - currentTime.secondstime()) < 30) currentTime = tempTime;
 
   setTimeVar(MTVI_CURRENT_TIME, currentTime);
   startupTime = getTimeVar(MTVI_S_STARTUP_TIME);
