@@ -107,9 +107,11 @@ void turnOffPump() {
 
 void setPumpState(DT_STATE state) { //Update pump state
   if (dwellTankState == DTS_FLUSHING && state != DTS_FLUSHING) {
+    logText("Pump off");
     turnOffPump();
   }
   else if (dwellTankState != DTS_FLUSHING && state == DTS_FLUSHING) {
+    logText("Pump on");
     turnOnPump();
   }
   dwellTankState = state;

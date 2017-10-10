@@ -16,7 +16,7 @@
 #include "Schedule.h"
 #include "Monitoring.h"
 
-#define WASTED_MEMORY 0 //Set to zero for normal opperation set to higher (eg 23) to add memory pressure
+#define WASTED_MEMORY 0 //Set to zero for normal opperation set to higher (eg 300) to add memory pressure
 
 // The control pins for the LCD can be assigned to any digital or
 // analog pins...but we'll use the analog pins as this allows us to
@@ -80,6 +80,8 @@ char hexaKeys[ROWS][COLS] = {
 byte rowPins[ROWS] = {45, 43, 41, 39}; //connect to the row pinouts of the keypad
 byte colPins[COLS] = {37, 35, 33, 31}; //connect to the column pinouts of the keypad
 
+long memoryHog[WASTED_MEMORY];
+
 //initialize an instance of class NewKeypad
 Keypad keypad = Keypad( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 
@@ -109,6 +111,7 @@ void initMenu() {
   //  tft.reset();
   //  uint16_t identifier = tft.readID();
   //  tft.begin(identifier);
+  for(int i = 0; i <WASTED_MEMORY;i++) memoryHog[i] = 294857L;
 
   tft.begin(HX8357D);
 
@@ -240,11 +243,11 @@ void updateMenu(int endTime) {
   }
 
 #if WASTED_MEMORY > 0
-  String strings[20];
-  for (int i = 0; i < WASTED_MEMORY; i++) {
-    strings[i] = "This string is long to test wasting memory to simulate crash";
-    checkMemory();
-  }
+//  String strings[20];
+//  for (int i = 0; i < WASTED_MEMORY; i++) {
+//    strings[i] = "This string is long to test wasting memory to simulate crash";
+//    checkMemory();
+//  }
 #endif
 
   isEditing = false;
