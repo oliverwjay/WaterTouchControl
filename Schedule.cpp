@@ -10,7 +10,11 @@ DateTime shutdownTime;
 DateTime startupTime;
 DateTime currentTime;
 
+#define CLK_RESET 24
+
 void initSchedule() {
+  pinMode( CLK_RESET, OUTPUT );
+  digitalWrite( CLK_RESET, HIGH );
   shutdownTime = DateTime(0);
   startupTime = DateTime(0);
   DateTime compileTime = DateTime(F(__DATE__), F(__TIME__));
@@ -20,6 +24,7 @@ void initSchedule() {
   }
   currentTime = rtc.now();
   setTimeVar(MTVI_CURRENT_TIME, currentTime);
+  
 }
 
 bool isTime(DateTime _time) {
@@ -34,6 +39,12 @@ bool isTime(DateTime _time) {
 }
 
 void updateSchedule() {
+  if( ! rtc.isrunning() ) {
+      Serial.println("DS1307 down, attempting chip reset"); 
+      digitalWrite( CLK_RESET, LOW );  // Power down
+      delay(20);               // time for any capacitance to discharge
+      digitalWrite( CLK_RESET, HIGH ); // Power back up
+  }
   if (getTimeVar(MTVI_CURRENT_TIME).secondstime() != currentTime.secondstime()) {
     rtc.adjust(getTimeVar(MTVI_CURRENT_TIME));
   }
