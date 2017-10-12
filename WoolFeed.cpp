@@ -63,7 +63,7 @@ void updateWoolFeed() {
       break;
     case WFS_FEEDING:
       if (analogRead(WOOL_SENSE_PIN) < getVar(MVI_WF_THRESHOLD)) {
-        setWoolFeedState(WFS_IDLE);
+        setWoolFeedState(WFS_EXTENDING);
         updateError(SE_NO_WOOL, SES_NORMAL);
       }
       if (millis() - lastWFSwitch > 30 * 1000L) {
@@ -71,6 +71,9 @@ void updateWoolFeed() {
         if (getVar(MVI_WF_CAUSE_SHUTDOWN) == 1) updateError(SE_NO_WOOL, SES_ERROR);
         else updateError(SE_NO_WOOL, SES_TEXT_ONLY);
       }
+      break;
+    case WFS_EXTENDING:
+      if (millis() - lastWFSwitch > getVar(MVI_WF_REV_TIME) * 1000L) setWoolFeedState(WFS_IDLE);
       break;
   }
 }
@@ -87,7 +90,7 @@ void setWoolFeedState(WF_STATE newState) {
     digitalWrite(DRIVE_BRAKE, LOW);
     analogWrite(DRIVE_PWM, getVar(MVI_WF_PWR));
   }
-  else if (newState == WFS_MAN_FEEDING || newState == WFS_FEEDING) {
+  else if (newState == WFS_MAN_FEEDING || newState == WFS_FEEDING || newState == WFS_EXTENDING) {
     digitalWrite(DRIVE_CHANNEL, HIGH);
     digitalWrite(DRIVE_BRAKE, LOW);
     analogWrite(DRIVE_PWM, getVar(MVI_WF_PWR));
