@@ -4,6 +4,8 @@
 #include "Status.h"
 #include "Monitoring.h"
 
+#define LOG_WOOL_FEED false
+
 #define DRIVE_CHANNEL_A 12
 #define DRIVE_BRAKE_A 9
 #define DRIVE_PWM_A 3
@@ -34,7 +36,7 @@ void initWoolFeed() {
   //  servo.attach(SERVO_PORT);
   //  servo.write(0);
 
-//  Serial.begin(9600);
+  //  Serial.begin(9600);
 
   lastWFSwitch = millis();
 }
@@ -62,7 +64,7 @@ void updateWoolFeed() {
   }
   setVar(MVI_WF_ANALOG_IN, analogRead(WOOL_SENSE_PIN));
   if (woolFeedState == WFS_OFF) updateError(SE_NO_WOOL, SES_NORMAL);
-  
+
   switch (woolFeedState) {
     case WFS_IDLE:
       if (millis() - lastWFSwitch > getVar(MVI_WF_PERIOD) * 1000L * 60L) setWoolFeedState(WFS_REVERSING);
@@ -94,6 +96,11 @@ void updateWoolFeed() {
 }
 
 void setWoolFeedState(WF_STATE newState) {
+  if (LOG_WOOL_FEED) {
+    String toLog = "Entering state: ";
+    toLog += newState;
+    logText(toLog);
+  }
   if (newState == woolFeedState) {
     return ;
   }
