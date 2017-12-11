@@ -4,6 +4,7 @@
 #include "Menu.h"
 
 #define INFLUENT_PUMP_PIN 36
+#define PEROXIDE_PUMP_PIN 36
 #define BRINE_PUMP_PIN 34
 #define EFFLUENT_VALVE_PIN 30
 
@@ -27,7 +28,8 @@ void initFlow(){
 void updateFlow(){
 	if(isFlowEnabled!=shouldEnableFlow()){
 		isFlowEnabled = shouldEnableFlow();
-		digitalWrite(BRINE_PUMP_PIN, isFlowEnabled);
+   digitalWrite(BRINE_PUMP_PIN, isFlowEnabled);
+   digitalWrite(PEROXIDE_PUMP_PIN, isFlowEnabled);
 		digitalWrite(INFLUENT_PUMP_PIN, isFlowEnabled);
 	}
 	if(isDrainEnabled!=shouldEnableDrain()){

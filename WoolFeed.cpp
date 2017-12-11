@@ -2,11 +2,12 @@
 #include "WoolFeed.h"
 #include "Menu.h"
 #include "Status.h"
+#include "Monitoring.h"
 
 #define DRIVE_CHANNEL_A 12
 #define DRIVE_BRAKE_A 9
 #define DRIVE_PWM_A 3
-#define DRIVE_CHANNEL_B 13
+#define DRIVE_CHANNEL_B 7
 #define DRIVE_BRAKE_B 8
 #define DRIVE_PWM_B 11
 #define SERVO_PORT 5
@@ -21,6 +22,7 @@ WF_STATE woolFeedState = WFS_OFF;
 unsigned long lastWFSwitch;
 bool statusWFEnabled = false;
 bool statusWasWFEnabled = false;
+double woolFeedRate = 1.1;
 
 void initWoolFeed() {
   pinMode(DRIVE_CHANNEL_A, OUTPUT); // set up motor drive
@@ -66,7 +68,7 @@ void updateWoolFeed() {
       if (millis() - lastWFSwitch > getVar(MVI_WF_PERIOD) * 1000L * 60L) setWoolFeedState(WFS_REVERSING);
       break;
     case WFS_REVERSING:
-      if (millis() - lastWFSwitch > getVar(MVI_WF_REV_TIME) * 1000L) setWoolFeedState(WFS_FEEDING);
+      if (millis() - lastWFSwitch > getVar(MVI_WF_REV_TIME) * 1000L) setWoolFeedState(WFS_EXTENDING); //setWoolFeedState(WFS_FEEDING);
       break;
     case WFS_FEEDING:
       if (analogRead(WOOL_SENSE_PIN) < getVar(MVI_WF_THRESHOLD)) {
@@ -80,7 +82,10 @@ void updateWoolFeed() {
       }
       break;
     case WFS_EXTENDING:
-      if (millis() - lastWFSwitch > getVar(MVI_WF_REV_TIME) * 1000L) setWoolFeedState(WFS_STRETCHING);
+      if (millis() - lastWFSwitch > getVar(MVI_WF_REV_TIME) * 1000L * woolFeedRate) {
+        woolFeedRate *= analogRead(WOOL_SENSE_PIN) < getVar(MVI_WF_THRESHOLD) ? .95 : 1.05;
+        setWoolFeedState(WFS_STRETCHING);
+      }
       break;
     case WFS_STRETCHING:
       if (millis() - lastWFSwitch > STRETCH_TIME) setWoolFeedState(WFS_IDLE);
