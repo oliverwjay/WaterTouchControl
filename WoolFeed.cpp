@@ -16,7 +16,7 @@
 #define CIRCULATION_PUMP_RELAY 42
 #define WOOL_SENSE_PIN A15
 
-#define STRETCH_TIME 500 //in ms
+#define STRETCH_TIME 5 //in ms
 
 //Servo servo;
 
@@ -24,7 +24,7 @@ WF_STATE woolFeedState = WFS_OFF;
 unsigned long lastWFSwitch;
 bool statusWFEnabled = false;
 bool statusWasWFEnabled = false;
-double woolFeedRate = 1.1;
+double woolFeedRate = 1.0;
 
 void initWoolFeed() {
   pinMode(DRIVE_CHANNEL_A, OUTPUT); // set up motor drive
@@ -84,8 +84,8 @@ void updateWoolFeed() {
       }
       break;
     case WFS_EXTENDING:
-      if (millis() - lastWFSwitch > getVar(MVI_WF_REV_TIME) * 1000L * woolFeedRate) {
-        woolFeedRate *= analogRead(WOOL_SENSE_PIN) < getVar(MVI_WF_THRESHOLD) ? .95 : 1.05;
+      if (millis() - lastWFSwitch > getVar(MVI_WF_REV_TIME) * 920L * woolFeedRate) {  // 920L sets the bias for fwd vs rev
+        woolFeedRate = analogRead(WOOL_SENSE_PIN) < getVar(MVI_WF_THRESHOLD) ? .95 : 1.07;
         setWoolFeedState(WFS_STRETCHING);
       }
       break;
